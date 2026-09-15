@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowDown, ArrowUpRight, CalendarDays, Check, ChevronDown, Clock3, Heart, MapPin, Menu, Music2, Pause, Play, X } from 'lucide-react';
+import { ArrowDown, ArrowUpRight, CalendarDays, Check, ChevronDown, Clock3, Heart, MapPin, Menu, Pause, Play, X } from 'lucide-react';
 import { WEDDING_CONFIG as config } from './config/wedding';
 
 const pad = (value) => String(value).padStart(2, '0');
@@ -96,15 +96,19 @@ function MusicControl() {
     const player = new Audio(config.musicUrl);
     player.loop = true;
     audio.current = player;
-    player.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
-    return () => { player.pause(); audio.current = null; };
+    const markPlaying = () => setPlaying(true);
+    const markPaused = () => setPlaying(false);
+    player.addEventListener('play', markPlaying);
+    player.addEventListener('pause', markPaused);
+    player.play().catch(() => setPlaying(false));
+    return () => { player.pause(); player.removeEventListener('play', markPlaying); player.removeEventListener('pause', markPaused); audio.current = null; };
   }, []);
   const toggle = () => {
     if (!audio.current) return;
-    if (playing) { audio.current.pause(); setPlaying(false); }
-    else audio.current.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+    if (playing) audio.current.pause();
+    else audio.current.play().catch(() => setPlaying(false));
   };
-  return <button className="music-control" onClick={toggle} aria-label={playing ? 'Pause music' : 'Play music'} title={config.musicUrl ? undefined : 'Add a music URL in src/config/wedding.js'}>{playing ? <Pause size={15} /> : <Music2 size={15} />}<span>{playing ? 'Music on' : 'Music off'}</span></button>;
+  return <button className="music-control" onClick={toggle} aria-pressed={playing} aria-label={playing ? 'Pause music' : 'Play music'} title={playing ? 'Pause music' : 'Play music'}>{playing ? <Pause size={15} /> : <Play size={15} />}</button>;
 }
 
 function useScrollReveal(enabled) {
