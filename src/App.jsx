@@ -6,7 +6,7 @@ const pad = (value) => String(value).padStart(2, '0');
 
 function Opening({ onOpen }) {
   const [opening, setOpening] = useState(false);
-  const open = () => { setOpening(true); window.setTimeout(onOpen, 1150); };
+  const open = () => { window.dispatchEvent(new Event('wedding-invitation-open')); setOpening(true); window.setTimeout(onOpen, 1150); };
   return <div className={`opening ${opening ? 'opening--away' : ''}`} aria-hidden={opening}>
     <div className="opening__grain" />
     <div className="opening__leaf opening__leaf--left" />
@@ -98,10 +98,12 @@ function MusicControl() {
     audio.current = player;
     const markPlaying = () => setPlaying(true);
     const markPaused = () => setPlaying(false);
+    const startFromInvitation = () => { player.play().catch(() => setPlaying(false)); };
     player.addEventListener('play', markPlaying);
     player.addEventListener('pause', markPaused);
+    window.addEventListener('wedding-invitation-open', startFromInvitation);
     player.play().catch(() => setPlaying(false));
-    return () => { player.pause(); player.removeEventListener('play', markPlaying); player.removeEventListener('pause', markPaused); audio.current = null; };
+    return () => { player.pause(); player.removeEventListener('play', markPlaying); player.removeEventListener('pause', markPaused); window.removeEventListener('wedding-invitation-open', startFromInvitation); audio.current = null; };
   }, []);
   const toggle = () => {
     if (!audio.current) return;
